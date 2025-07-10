@@ -15,7 +15,10 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { AppleIcon, CheckIcon, GithubIcon, LinkedinIcon } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AppleIcon, CheckIcon, GithubIcon, LinkedinIcon, AlertCircle } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const GoogleLogo = () => (
   <svg
@@ -46,7 +49,14 @@ const GoogleLogo = () => (
   </svg>
 );
 
-export default function AuthForm({ variant = "signin", onSubmit }) {
+interface AuthFormProps {
+  variant?: "signin" | "signup";
+  onSubmit?: (data: any) => void;
+}
+
+export default function AuthForm({ variant = "signin", onSubmit }: AuthFormProps) {
+  const { signIn, signUp } = useAuth();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState(variant);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -55,29 +65,85 @@ export default function AuthForm({ variant = "signin", onSubmit }) {
   const [company, setCompany] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      if (onSubmit) {
-        onSubmit({
-          email,
-          password,
+    try {
+      if (activeTab === "signup") {
+        // Validate passwords match
+        if (password !== confirmPassword) {
+          throw new Error("Passwords do not match");
+        }
+
+        if (password.length < 6) {
+          throw new Error("Password must be at least 6 characters long");
+        }
+
+        if (!agreeTerms) {
+          throw new Error("You must agree to the terms of service");
+        }
+
+        // Sign up with Supabase
+        await signUp(email, password, {
           name,
           company,
-          type: activeTab,
         });
+
+        toast({
+          title: "Account created successfully!",
+          description: "Welcome to Arclane B2B Marketplace.",
+        });
+
+        // Call onSubmit callback if provided
+        if (onSubmit) {
+          onSubmit({
+            email,
+            password,
+            name,
+            company,
+            type: activeTab,
+          });
+        }
+      } else {
+        // Sign in with Supabase
+        await signIn(email, password);
+
+        toast({
+          title: "Signed in successfully!",
+          description: "Welcome back to Arclane B2B Marketplace.",
+        });
+
+        // Call onSubmit callback if provided
+        if (onSubmit) {
+          onSubmit({
+            email,
+            password,
+            type: activeTab,
+          });
+        }
       }
-    }, 1000);
+    } catch (err: any) {
+      console.error("Authentication error:", err);
+      const errorMessage = err.message || "An error occurred during authentication";
+      setError(errorMessage);
+      
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: errorMessage,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Card className="w-full max-w-md mx-auto">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "signin" | "signup")} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="signin">Sign In</TabsTrigger>
           <TabsTrigger value="signup">Create Account</TabsTrigger>
@@ -93,12 +159,11 @@ export default function AuthForm({ variant = "signin", onSubmit }) {
           <CardContent>
             <div className="grid gap-4">
               <div className="grid grid-cols-2 gap-4">
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full" disabled>
                   <GoogleLogo />
-
                   <span className="ml-2">Google</span>
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full" disabled>
                   <LinkedinIcon className="h-5 w-5 mr-2" />
                   LinkedIn
                 </Button>
@@ -115,6 +180,13 @@ export default function AuthForm({ variant = "signin", onSubmit }) {
                 </div>
               </div>
 
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="signin-email">Email</Label>
@@ -125,6 +197,7 @@ export default function AuthForm({ variant = "signin", onSubmit }) {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -143,6 +216,8 @@ export default function AuthForm({ variant = "signin", onSubmit }) {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    disabled={loading}
+                    minLength={6}
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
@@ -163,12 +238,11 @@ export default function AuthForm({ variant = "signin", onSubmit }) {
           <CardContent>
             <div className="grid gap-4">
               <div className="grid grid-cols-2 gap-4">
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full" disabled>
                   <GoogleLogo />
-
                   <span className="ml-2">Google</span>
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full" disabled>
                   <LinkedinIcon className="h-5 w-5 mr-2" />
                   LinkedIn
                 </Button>
@@ -185,6 +259,13 @@ export default function AuthForm({ variant = "signin", onSubmit }) {
                 </div>
               </div>
 
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -195,6 +276,7 @@ export default function AuthForm({ variant = "signin", onSubmit }) {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       required
+                      disabled={loading}
                     />
                   </div>
                   <div className="space-y-2">
@@ -205,6 +287,7 @@ export default function AuthForm({ variant = "signin", onSubmit }) {
                       value={company}
                       onChange={(e) => setCompany(e.target.value)}
                       required
+                      disabled={loading}
                     />
                   </div>
                 </div>
@@ -217,6 +300,7 @@ export default function AuthForm({ variant = "signin", onSubmit }) {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -227,6 +311,9 @@ export default function AuthForm({ variant = "signin", onSubmit }) {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    disabled={loading}
+                    minLength={6}
+                    placeholder="At least 6 characters"
                   />
                 </div>
                 <div className="space-y-2">
@@ -239,16 +326,19 @@ export default function AuthForm({ variant = "signin", onSubmit }) {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
+                    disabled={loading}
+                    minLength={6}
+                    placeholder="Confirm your password"
                   />
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="terms"
                     checked={agreeTerms}
-                    onCheckedChange={setAgreeTerms}
+                    onCheckedChange={(checked) => setAgreeTerms(checked as boolean)}
                     required
+                    disabled={loading}
                   />
-
                   <label
                     htmlFor="terms"
                     className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"

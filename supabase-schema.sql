@@ -54,7 +54,7 @@ CREATE TABLE products (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Orders table
+-- Orders table (user_id as UUID)
 CREATE TABLE orders (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id UUID NOT NULL,
@@ -66,7 +66,7 @@ CREATE TABLE orders (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- RFQs (Request for Quotations) table
+-- RFQs (Request for Quotations) table (user_id as UUID)
 CREATE TABLE rfqs (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id UUID NOT NULL,
@@ -102,39 +102,91 @@ CREATE POLICY "Categories are viewable by everyone" ON categories FOR SELECT USI
 CREATE POLICY "Suppliers are viewable by everyone" ON suppliers FOR SELECT USING (true);
 CREATE POLICY "Products are viewable by everyone" ON products FOR SELECT USING (true);
 
--- Users can only see their own orders and RFQs
-CREATE POLICY "Users can view own orders" ON orders FOR SELECT USING (auth.uid()::text = user_id);
-CREATE POLICY "Users can view own RFQs" ON rfqs FOR SELECT USING (auth.uid()::text = user_id);
+-- Users can only see their own orders and RFQs (fixed UUID comparison)
+CREATE POLICY "Users can view own orders" ON orders FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can view own RFQs" ON rfqs FOR SELECT USING (auth.uid() = user_id);
 
--- Users can create their own orders and RFQs
-CREATE POLICY "Users can create orders" ON orders FOR INSERT WITH CHECK (auth.uid()::text = user_id);
-CREATE POLICY "Users can create RFQs" ON rfqs FOR INSERT WITH CHECK (auth.uid()::text = user_id);
+-- Users can create their own orders and RFQs (fixed UUID comparison)
+CREATE POLICY "Users can create orders" ON orders FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can create RFQs" ON rfqs FOR INSERT WITH CHECK (auth.uid() = user_id);
 
--- Users can update their own RFQs
-CREATE POLICY "Users can update own RFQs" ON rfqs FOR UPDATE USING (auth.uid()::text = user_id);
+-- Users can update their own RFQs (fixed UUID comparison)
+CREATE POLICY "Users can update own RFQs" ON rfqs FOR UPDATE USING (auth.uid() = user_id);
 
--- Insert sample data
--- Categories
-INSERT INTO categories (id, name, description, image, product_count) VALUES
-('cat-001', 'Industrial Supplies', 'Industrial equipment and supplies', 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400', 45),
-('cat-002', 'Electronics', 'Electronic components and devices', 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=400', 32),
-('cat-003', 'Machinery', 'Industrial machinery and equipment', 'https://images.unsplash.com/photo-1565057451833-4526e67d589f?w=400', 28),
-('cat-004', 'Raw Materials', 'Raw materials and commodities', 'https://images.unsplash.com/photo-1566843015771-d33d2dce3a8f?w=400', 67),
-('cat-005', 'Packaging', 'Packaging materials and supplies', 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400', 23),
-('cat-006', 'Office Supplies', 'Office equipment and supplies', 'https://images.unsplash.com/photo-1497032628192-86f99bcd76bc?w=400', 18);
+-- Insert sample data with proper UUIDs
+-- First, let's create some variables to store the UUIDs for referencing
 
--- Suppliers
-INSERT INTO suppliers (id, name, logo, country, response_rate, response_time, year_established, verification_level, rating, review_count, total_revenue) VALUES
-('sup-001', 'TechPro Industries', 'https://github.com/polymet-ai.png', 'United States', 95, '< 2 hours', 2015, 'platinum', 4.8, 324, '$2.3M'),
-('sup-002', 'Global Materials Co.', 'https://github.com/polymet-ai.png', 'Germany', 92, '< 4 hours', 2008, 'gold', 4.6, 198, '$1.8M'),
-('sup-003', 'PackMaster Solutions', 'https://github.com/polymet-ai.png', 'China', 88, '< 6 hours', 2012, 'verified', 4.4, 145, '$980K'),
-('sup-004', 'SafetyFirst Equipment', 'https://github.com/polymet-ai.png', 'Canada', 94, '< 3 hours', 2010, 'gold', 4.7, 267, '$1.5M'),
-('sup-005', 'ElectroSupply Inc.', 'https://github.com/polymet-ai.png', 'Japan', 96, '< 1 hour', 2005, 'platinum', 4.9, 445, '$3.1M');
+-- Categories (let database generate UUIDs, but we'll reference them in products)
+DO $$
+DECLARE
+    cat_industrial_id UUID;
+    cat_electronics_id UUID;
+    cat_machinery_id UUID;
+    cat_raw_materials_id UUID;
+    cat_packaging_id UUID;
+    cat_office_id UUID;
+    
+    sup_techpro_id UUID;
+    sup_global_id UUID;
+    sup_packmaster_id UUID;
+    sup_safety_id UUID;
+    sup_electro_id UUID;
+BEGIN
+    -- Insert categories and get their IDs
+    INSERT INTO categories (name, description, image, product_count) VALUES
+    ('Industrial Supplies', 'Industrial equipment and supplies', 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400', 45)
+    RETURNING id INTO cat_industrial_id;
+    
+    INSERT INTO categories (name, description, image, product_count) VALUES
+    ('Electronics', 'Electronic components and devices', 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=400', 32)
+    RETURNING id INTO cat_electronics_id;
+    
+    INSERT INTO categories (name, description, image, product_count) VALUES
+    ('Machinery', 'Industrial machinery and equipment', 'https://images.unsplash.com/photo-1565057451833-4526e67d589f?w=400', 28)
+    RETURNING id INTO cat_machinery_id;
+    
+    INSERT INTO categories (name, description, image, product_count) VALUES
+    ('Raw Materials', 'Raw materials and commodities', 'https://images.unsplash.com/photo-1566843015771-d33d2dce3a8f?w=400', 67)
+    RETURNING id INTO cat_raw_materials_id;
+    
+    INSERT INTO categories (name, description, image, product_count) VALUES
+    ('Packaging', 'Packaging materials and supplies', 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400', 23)
+    RETURNING id INTO cat_packaging_id;
+    
+    INSERT INTO categories (name, description, image, product_count) VALUES
+    ('Office Supplies', 'Office equipment and supplies', 'https://images.unsplash.com/photo-1497032628192-86f99bcd76bc?w=400', 18)
+    RETURNING id INTO cat_office_id;
 
--- Products
-INSERT INTO products (id, title, slug, description, images, price_min, price_max, currency, min_order, category_id, tags, supplier_id, rating, review_count, shipping_time, payment_methods, customization_available, featured) VALUES
-('prod-001', 'Industrial Safety Helmet', 'industrial-safety-helmet', 'High-quality safety helmet for industrial use', ARRAY['https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400'], 25.00, 45.00, 'USD', 10, 'cat-001', ARRAY['safety', 'helmet', 'industrial'], 'sup-004', 4.5, 89, '3-5 days', ARRAY['Credit Card', 'Bank Transfer'], true, true),
-('prod-002', 'Electronic Components Kit', 'electronic-components-kit', 'Complete kit of electronic components for prototyping', ARRAY['https://images.unsplash.com/photo-1518770660439-4636190af475?w=400'], 150.00, 300.00, 'USD', 1, 'cat-002', ARRAY['electronics', 'components', 'kit'], 'sup-005', 4.7, 156, '2-4 days', ARRAY['Credit Card', 'PayPal'], false, true),
-('prod-003', 'Packaging Materials Bundle', 'packaging-materials-bundle', 'Comprehensive packaging materials for shipping', ARRAY['https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400'], 50.00, 120.00, 'USD', 50, 'cat-005', ARRAY['packaging', 'shipping', 'materials'], 'sup-003', 4.3, 67, '5-7 days', ARRAY['Credit Card', 'Bank Transfer'], true, false),
-('prod-004', 'Industrial Machinery Parts', 'industrial-machinery-parts', 'High-precision parts for industrial machinery', ARRAY['https://images.unsplash.com/photo-1565057451833-4526e67d589f?w=400'], 500.00, 2000.00, 'USD', 1, 'cat-003', ARRAY['machinery', 'parts', 'industrial'], 'sup-001', 4.8, 234, '7-10 days', ARRAY['Bank Transfer', 'Letter of Credit'], true, true),
-('prod-005', 'Raw Steel Materials', 'raw-steel-materials', 'Premium quality raw steel for manufacturing', ARRAY['https://images.unsplash.com/photo-1566843015771-d33d2dce3a8f?w=400'], 800.00, 1200.00, 'USD', 100, 'cat-004', ARRAY['steel', 'raw materials', 'manufacturing'], 'sup-002', 4.6, 123, '10-14 days', ARRAY['Bank Transfer', 'Letter of Credit'], false, true); 
+    -- Insert suppliers and get their IDs
+    INSERT INTO suppliers (name, logo, country, response_rate, response_time, year_established, verification_level, rating, review_count, total_revenue) VALUES
+    ('TechPro Industries', 'https://github.com/polymet-ai.png', 'United States', 95, '< 2 hours', 2015, 'platinum', 4.8, 324, '$2.3M')
+    RETURNING id INTO sup_techpro_id;
+    
+    INSERT INTO suppliers (name, logo, country, response_rate, response_time, year_established, verification_level, rating, review_count, total_revenue) VALUES
+    ('Global Materials Co.', 'https://github.com/polymet-ai.png', 'Germany', 92, '< 4 hours', 2008, 'gold', 4.6, 198, '$1.8M')
+    RETURNING id INTO sup_global_id;
+    
+    INSERT INTO suppliers (name, logo, country, response_rate, response_time, year_established, verification_level, rating, review_count, total_revenue) VALUES
+    ('PackMaster Solutions', 'https://github.com/polymet-ai.png', 'China', 88, '< 6 hours', 2012, 'verified', 4.4, 145, '$980K')
+    RETURNING id INTO sup_packmaster_id;
+    
+    INSERT INTO suppliers (name, logo, country, response_rate, response_time, year_established, verification_level, rating, review_count, total_revenue) VALUES
+    ('SafetyFirst Equipment', 'https://github.com/polymet-ai.png', 'Canada', 94, '< 3 hours', 2010, 'gold', 4.7, 267, '$1.5M')
+    RETURNING id INTO sup_safety_id;
+    
+    INSERT INTO suppliers (name, logo, country, response_rate, response_time, year_established, verification_level, rating, review_count, total_revenue) VALUES
+    ('ElectroSupply Inc.', 'https://github.com/polymet-ai.png', 'Japan', 96, '< 1 hour', 2005, 'platinum', 4.9, 445, '$3.1M')
+    RETURNING id INTO sup_electro_id;
+
+    -- Insert products using the generated IDs
+    INSERT INTO products (title, slug, description, images, price_min, price_max, currency, min_order, category_id, tags, supplier_id, rating, review_count, shipping_time, payment_methods, customization_available, featured) VALUES
+    ('Industrial Safety Helmet', 'industrial-safety-helmet', 'High-quality safety helmet for industrial use', ARRAY['https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400'], 25.00, 45.00, 'USD', 10, cat_industrial_id, ARRAY['safety', 'helmet', 'industrial'], sup_safety_id, 4.5, 89, '3-5 days', ARRAY['Credit Card', 'Bank Transfer'], true, true),
+    
+    ('Electronic Components Kit', 'electronic-components-kit', 'Complete kit of electronic components for prototyping', ARRAY['https://images.unsplash.com/photo-1518770660439-4636190af475?w=400'], 150.00, 300.00, 'USD', 1, cat_electronics_id, ARRAY['electronics', 'components', 'kit'], sup_electro_id, 4.7, 156, '2-4 days', ARRAY['Credit Card', 'PayPal'], false, true),
+    
+    ('Packaging Materials Bundle', 'packaging-materials-bundle', 'Comprehensive packaging materials for shipping', ARRAY['https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400'], 50.00, 120.00, 'USD', 50, cat_packaging_id, ARRAY['packaging', 'shipping', 'materials'], sup_packmaster_id, 4.3, 67, '5-7 days', ARRAY['Credit Card', 'Bank Transfer'], true, false),
+    
+    ('Industrial Machinery Parts', 'industrial-machinery-parts', 'High-precision parts for industrial machinery', ARRAY['https://images.unsplash.com/photo-1565057451833-4526e67d589f?w=400'], 500.00, 2000.00, 'USD', 1, cat_machinery_id, ARRAY['machinery', 'parts', 'industrial'], sup_techpro_id, 4.8, 234, '7-10 days', ARRAY['Bank Transfer', 'Letter of Credit'], true, true),
+    
+    ('Raw Steel Materials', 'raw-steel-materials', 'Premium quality raw steel for manufacturing', ARRAY['https://images.unsplash.com/photo-1566843015771-d33d2dce3a8f?w=400'], 800.00, 1200.00, 'USD', 100, cat_raw_materials_id, ARRAY['steel', 'raw materials', 'manufacturing'], sup_global_id, 4.6, 123, '10-14 days', ARRAY['Bank Transfer', 'Letter of Credit'], false, true);
+END $$; 

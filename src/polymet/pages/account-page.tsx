@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useParams } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   BellIcon,
   BuildingIcon,
@@ -23,15 +24,16 @@ import Breadcrumb from "@/polymet/components/breadcrumb";
 
 export default function AccountPage() {
   const [activeTab, setActiveTab] = useState("overview");
+  const { user: authUser, loading: authLoading, signOut } = useAuth();
 
-  // Mock user data
+  // Mock user data (in a real app, you'd get this from the authenticated user)
   const user = {
-    name: "John Smith",
-    email: "john.smith@acmecorp.com",
+    name: authUser?.user_metadata?.name || "John Smith",
+    email: authUser?.email || "john.smith@acmecorp.com",
     avatar: "https://github.com/yusufhilmi.png",
-    company: "Acme Corporation",
+    company: authUser?.user_metadata?.company || "Acme Corporation",
     memberSince: "Jan 2023",
-    verificationLevel: "gold",
+    verificationLevel: "gold" as const,
     completionPercentage: 85,
   };
 

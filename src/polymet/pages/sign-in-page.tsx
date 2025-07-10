@@ -1,19 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import AuthForm from "@/polymet/components/auth-form";
 import ArclaneLogo from "@/polymet/components/arclane-logo";
+import { CheckIcon } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function SignInPage() {
   const [authSuccess, setAuthSuccess] = useState(false);
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
 
-  const handleAuthSubmit = (data) => {
-    // In a real app, this would call an API
+  // Redirect if already signed in
+  useEffect(() => {
+    if (user && !loading) {
+      navigate("/account");
+    }
+  }, [user, loading, navigate]);
+
+  const handleAuthSubmit = (data: any) => {
     console.log("Auth data:", data);
-
-    // Simulate successful authentication
+    
+    // Show success message
     setAuthSuccess(true);
 
     // Redirect after a short delay
@@ -22,6 +31,18 @@ export default function SignInPage() {
     }, 1500);
   };
 
+  // Show loading while checking auth state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Header */}
@@ -29,7 +50,6 @@ export default function SignInPage() {
         <div className="container flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 font-bold">
             <ArclaneLogo />
-
             <span>Arclane</span>
           </Link>
           <div className="flex items-center gap-4">
@@ -70,7 +90,6 @@ export default function SignInPage() {
                       className="text-primary"
                     >
                       <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
-
                       <path d="m9 12 2 2 4-4" />
                     </svg>
                   </div>
@@ -97,7 +116,6 @@ export default function SignInPage() {
                       className="text-primary"
                     >
                       <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
-
                       <path d="m9 12 2 2 4-4" />
                     </svg>
                   </div>
@@ -124,7 +142,6 @@ export default function SignInPage() {
                       className="text-primary"
                     >
                       <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
-
                       <path d="m9 12 2 2 4-4" />
                     </svg>
                   </div>

@@ -2,6 +2,7 @@ import React from "react";
 import * as ReactDOM from "react-dom";
 import { createRoot } from "react-dom/client";
 import App from "./App";
+import { Toaster } from "@/components/ui/toaster";
 import "./index.css";
 
 // Make React and ReactDOM globally available immediately (not in useEffect)
@@ -12,6 +13,7 @@ function Main() {
   return (
     <React.StrictMode>
       <App />
+      <Toaster />
     </React.StrictMode>
   );
 }

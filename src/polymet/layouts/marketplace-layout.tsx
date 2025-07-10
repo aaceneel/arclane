@@ -28,12 +28,23 @@ import {
   SearchIcon,
   ShoppingCartIcon,
   UserIcon,
+  LogOutIcon,
 } from "lucide-react";
 import ArclaneLogo from "@/polymet/components/arclane-logo";
 import { ReactNode } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function MarketplaceLayout({ children }: { children: ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, loading, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
 
   const mainCategories = [
     { name: "Industrial Supplies", path: "/category/industrial-supplies" },
@@ -85,16 +96,28 @@ export default function MarketplaceLayout({ children }: { children: ReactNode })
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" className="h-8">
               <HelpCircleIcon className="mr-2 h-4 w-4" />
-
               <span>Help Center</span>
             </Button>
             <div className="h-4 border-r border-border"></div>
-            <Button variant="ghost" size="sm" className="h-8">
-              Sign In
-            </Button>
-            <Button size="sm" className="h-8">
-              Join Free
-            </Button>
+            {loading ? (
+              <div className="h-8 w-20 animate-pulse bg-muted rounded"></div>
+            ) : user ? (
+              <div className="flex items-center gap-2">
+                <span className="text-sm">Welcome, {user.email?.split('@')[0]}</span>
+                <Button variant="ghost" size="sm" className="h-8" onClick={handleSignOut}>
+                  Sign Out
+                </Button>
+              </div>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" className="h-8" asChild>
+                  <Link to="/sign-in">Sign In</Link>
+                </Button>
+                <Button size="sm" className="h-8" asChild>
+                  <Link to="/sign-up">Join Free</Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -276,35 +299,50 @@ export default function MarketplaceLayout({ children }: { children: ReactNode })
                   2
                 </Badge>
               </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="rounded-full border-2"
-                    aria-label="User menu"
-                  >
-                    <UserIcon className="h-5 w-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-[240px]">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="rounded-full border-2"
+                      aria-label="User menu"
+                    >
+                      <UserIcon className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-[240px]">
+                    <DropdownMenuLabel>
+                      <div>
+                        <p className="font-medium">{user.user_metadata?.name || 'User'}</p>
+                        <p className="text-sm text-muted-foreground">{user.email}</p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
 
-                  {userMenuItems.map((item) => (
-                    <DropdownMenuItem key={item.label} asChild>
-                      <Link to={item.path} className="flex items-center gap-2">
-                        <item.icon className="h-4 w-4" />
+                    {userMenuItems.map((item) => (
+                      <DropdownMenuItem key={item.label} asChild>
+                        <Link to={item.path} className="flex items-center gap-2">
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.label}</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                    <DropdownMenuSeparator />
 
-                        <span>{item.label}</span>
-                      </Link>
+                    <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2">
+                      <LogOutIcon className="h-4 w-4" />
+                      <span>Log Out</span>
                     </DropdownMenuItem>
-                  ))}
-                  <DropdownMenuSeparator />
-
-                  <DropdownMenuItem>Log Out</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button variant="ghost" size="icon" className="rounded-full border-2" asChild>
+                  <Link to="/sign-in" aria-label="Sign in">
+                    <UserIcon className="h-5 w-5" />
+                  </Link>
+                </Button>
+              )}
             </div>
           </div>
         </div>

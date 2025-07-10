@@ -1,20 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import AuthForm from "@/polymet/components/auth-form";
 import ArclaneLogo from "@/polymet/components/arclane-logo";
 import { CheckIcon } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function SignUpPage() {
   const [authSuccess, setAuthSuccess] = useState(false);
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
 
-  const handleAuthSubmit = (data) => {
-    // In a real app, this would call an API
+  // Redirect if already signed in
+  useEffect(() => {
+    if (user && !loading) {
+      navigate("/account");
+    }
+  }, [user, loading, navigate]);
+
+  const handleAuthSubmit = (data: any) => {
     console.log("Auth data:", data);
 
-    // Simulate successful registration
+    // Show success message
     setAuthSuccess(true);
 
     // Redirect after a short delay
@@ -23,6 +31,18 @@ export default function SignUpPage() {
     }, 2000);
   };
 
+  // Show loading while checking auth state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Header */}
@@ -30,7 +50,6 @@ export default function SignUpPage() {
         <div className="container flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 font-bold">
             <ArclaneLogo />
-
             <span>Arclane</span>
           </Link>
           <div className="flex items-center gap-4">
@@ -63,17 +82,14 @@ export default function SignUpPage() {
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2">
                       <CheckIcon className="h-5 w-5 text-green-500" />
-
                       <span>Source products from verified suppliers</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckIcon className="h-5 w-5 text-green-500" />
-
                       <span>Request quotes and negotiate prices</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckIcon className="h-5 w-5 text-green-500" />
-
                       <span>Track orders and manage shipments</span>
                     </li>
                   </ul>
@@ -84,17 +100,14 @@ export default function SignUpPage() {
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2">
                       <CheckIcon className="h-5 w-5 text-green-500" />
-
                       <span>Showcase products to global buyers</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckIcon className="h-5 w-5 text-green-500" />
-
                       <span>Receive and respond to RFQs</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckIcon className="h-5 w-5 text-green-500" />
-
                       <span>Manage orders and customer relationships</span>
                     </li>
                   </ul>

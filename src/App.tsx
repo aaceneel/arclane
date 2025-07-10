@@ -13,114 +13,122 @@ import DashboardMessagesPage from "@/polymet/pages/dashboard-messages-page";
 import CartPage from "@/polymet/pages/cart-page";
 import MessagesPage from "@/polymet/pages/messages-page";
 import SupabaseTestPage from "@/polymet/pages/supabase-test-page";
+import SignInPage from "@/polymet/pages/sign-in-page";
+import SignUpPage from "@/polymet/pages/sign-up-page";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 export default function MarketplacePrototype() {
   return (
-    <Router>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <MarketplaceLayout>
-              <HomePage />
-            </MarketplaceLayout>
-          }
-        />
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <MarketplaceLayout>
+                <HomePage />
+              </MarketplaceLayout>
+            }
+          />
 
-        <Route
-          path="/product/:slug"
-          element={
-            <MarketplaceLayout>
-              <ProductDetailPage />
-            </MarketplaceLayout>
-          }
-        />
+          <Route
+            path="/product/:slug"
+            element={
+              <MarketplaceLayout>
+                <ProductDetailPage />
+              </MarketplaceLayout>
+            }
+          />
 
-        <Route
-          path="/category/:categoryId"
-          element={
-            <MarketplaceLayout>
-              <CategoryListingPage />
-            </MarketplaceLayout>
-          }
-        />
+          <Route
+            path="/category/:categoryId"
+            element={
+              <MarketplaceLayout>
+                <CategoryListingPage />
+              </MarketplaceLayout>
+            }
+          />
 
-        <Route
-          path="/supplier/:supplierId"
-          element={
-            <MarketplaceLayout>
-              <SupplierProfilePage />
-            </MarketplaceLayout>
-          }
-        />
+          <Route
+            path="/supplier/:supplierId"
+            element={
+              <MarketplaceLayout>
+                <SupplierProfilePage />
+              </MarketplaceLayout>
+            }
+          />
 
-        <Route
-          path="/rfq"
-          element={
-            <MarketplaceLayout>
-              <RfqPage />
-            </MarketplaceLayout>
-          }
-        />
+          <Route
+            path="/rfq"
+            element={
+              <MarketplaceLayout>
+                <RfqPage />
+              </MarketplaceLayout>
+            }
+          />
 
-        <Route
-          path="/ready-to-ship"
-          element={
-            <MarketplaceLayout>
-              <ReadyToShipPage />
-            </MarketplaceLayout>
-          }
-        />
+          <Route
+            path="/ready-to-ship"
+            element={
+              <MarketplaceLayout>
+                <ReadyToShipPage />
+              </MarketplaceLayout>
+            }
+          />
 
-        <Route
-          path="/orders"
-          element={
-            <MarketplaceLayout>
-              <OrdersPage />
-            </MarketplaceLayout>
-          }
-        />
+          <Route
+            path="/orders"
+            element={
+              <MarketplaceLayout>
+                <OrdersPage />
+              </MarketplaceLayout>
+            }
+          />
 
-        <Route
-          path="/account"
-          element={
-            <MarketplaceLayout>
-              <AccountPage />
-            </MarketplaceLayout>
-          }
-        />
+          <Route
+            path="/account"
+            element={
+              <MarketplaceLayout>
+                <AccountPage />
+              </MarketplaceLayout>
+            }
+          />
 
-        <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
 
-        <Route path="/dashboard/messages" element={<DashboardMessagesPage />} />
+          <Route path="/dashboard/messages" element={<DashboardMessagesPage />} />
 
-        <Route
-          path="/cart"
-          element={
-            <MarketplaceLayout>
-              <CartPage />
-            </MarketplaceLayout>
-          }
-        />
+          <Route
+            path="/cart"
+            element={
+              <MarketplaceLayout>
+                <CartPage />
+              </MarketplaceLayout>
+            }
+          />
 
-        <Route
-          path="/messages"
-          element={
-            <MarketplaceLayout>
-              <MessagesPage />
-            </MarketplaceLayout>
-          }
-        />
+          <Route
+            path="/messages"
+            element={
+              <MarketplaceLayout>
+                <MessagesPage />
+              </MarketplaceLayout>
+            }
+          />
 
-        <Route
-          path="/supabase-test"
-          element={
-            <MarketplaceLayout>
-              <SupabaseTestPage />
-            </MarketplaceLayout>
-          }
-        />
-      </Routes>
-    </Router>
+          <Route
+            path="/supabase-test"
+            element={
+              <MarketplaceLayout>
+                <SupabaseTestPage />
+              </MarketplaceLayout>
+            }
+          />
+
+          <Route path="/sign-in" element={<SignInPage />} />
+          <Route path="/sign-up" element={<SignUpPage />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }

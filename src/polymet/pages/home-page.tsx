@@ -18,11 +18,7 @@ import CategoryCard from "@/polymet/components/category-card";
 import ProductCard from "@/polymet/components/product-card";
 import RfqForm from "@/polymet/components/rfq-form";
 import SupplierCard from "@/polymet/components/supplier-card";
-import {
-  FEATURED_PRODUCTS,
-  PRODUCT_CATEGORIES,
-  SUPPLIERS,
-} from "@/polymet/data/product-data";
+import { useProducts, useCategories, useSuppliers } from "@/hooks/useSupabase";
 import {
   ArrowRightIcon,
   BuildingIcon,
@@ -37,9 +33,15 @@ import {
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const featuredCategories = PRODUCT_CATEGORIES.slice(0, 6);
-  const featuredProducts = FEATURED_PRODUCTS.slice(0, 8);
-  const topSuppliers = SUPPLIERS.slice(0, 4);
+  // Use Supabase hooks instead of mock data
+  const { products: allProducts, loading: productsLoading } = useProducts({ featured: true, limit: 8 });
+  const { categories, loading: categoriesLoading } = useCategories();
+  const { suppliers, loading: suppliersLoading } = useSuppliers(4);
+
+  // Use the data from Supabase or fallback to empty arrays
+  const featuredCategories = categories?.slice(0, 6) || [];
+  const featuredProducts = allProducts || [];
+  const topSuppliers = suppliers || [];
 
   return (
     <div className="flex flex-col">
@@ -173,7 +175,7 @@ export default function HomePage() {
                     </TabsList>
                     <TabsContent value="rfq" className="mt-0">
                       <RfqForm
-                        categories={PRODUCT_CATEGORIES.map((cat) => ({
+                        categories={featuredCategories.map((cat) => ({
                           id: cat.id,
                           name: cat.name,
                         }))}
@@ -553,7 +555,7 @@ export default function HomePage() {
   );
 }
 
-function StarIcon(props) {
+function StarIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}
