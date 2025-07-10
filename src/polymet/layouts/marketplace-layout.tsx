@@ -30,8 +30,9 @@ import {
   UserIcon,
 } from "lucide-react";
 import ArclaneLogo from "@/polymet/components/arclane-logo";
+import { ReactNode } from "react";
 
-export default function MarketplaceLayout({ children }) {
+export default function MarketplaceLayout({ children }: { children: ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const mainCategories = [
@@ -335,7 +336,11 @@ export default function MarketplaceLayout({ children }) {
       </div>
 
       {/* Main content */}
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 bg-gray-50">
+        <div className="container py-6">
+          {children}
+        </div>
+      </main>
 
       {/* Footer */}
       <footer className="border-t bg-background">
