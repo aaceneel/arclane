@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { User, AuthChangeEvent, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
-import { authApi } from '@/lib/api'
 
 interface AuthContextType {
   user: User | null
@@ -18,8 +17,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Get initial session
-    authApi.getCurrentUser().then(setUser).finally(() => setLoading(false))
+    // Get initial session safely
+    const getInitialSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        setUser(session?.user ?? null)
+      } catch (error) {
+        console.warn('Auth session error:', error)
+        setUser(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    getInitialSession()
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -33,17 +44,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    const { user } = await authApi.signIn(email, password)
-    setUser(user)
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+    if (error) throw error
+    setUser(data.user)
   }
 
   const signUp = async (email: string, password: string, metadata?: any) => {
-    const { user } = await authApi.signUp(email, password, metadata)
-    setUser(user)
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: metadata
+      }
+    })
+    if (error) throw error
+    setUser(data.user)
   }
 
   const signOut = async () => {
-    await authApi.signOut()
+    const { error } = await supabase.auth.signOut()
+    if (error) throw error
     setUser(null)
   }
 

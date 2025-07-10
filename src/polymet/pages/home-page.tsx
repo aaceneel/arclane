@@ -38,10 +38,22 @@ export default function HomePage() {
   const { categories, loading: categoriesLoading } = useCategories();
   const { suppliers, loading: suppliersLoading } = useSuppliers(4);
 
-  // Use the data from Supabase or fallback to empty arrays
+  // Use the data from Supabase or fallback to empty arrays with proper null checks
   const featuredCategories = categories?.slice(0, 6) || [];
   const featuredProducts = allProducts || [];
   const topSuppliers = suppliers || [];
+
+  // Show loading state for critical sections
+  if (categoriesLoading || productsLoading || suppliersLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading marketplace...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col">
@@ -79,7 +91,6 @@ export default function HomePage() {
               <div className="flex flex-col space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0">
                 <div className="relative flex-1">
                   <SearchIcon className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-
                   <Input
                     type="text"
                     placeholder="Search products, suppliers..."
@@ -128,13 +139,11 @@ export default function HomePage() {
                       alt="User"
                       className="h-8 w-8 rounded-full border-2 border-background"
                     />
-
                     <img
                       src="https://github.com/furkanksl.png"
                       alt="User"
                       className="h-8 w-8 rounded-full border-2 border-background"
                     />
-
                     <img
                       src="https://github.com/kdrnp.png"
                       alt="User"
@@ -175,10 +184,12 @@ export default function HomePage() {
                     </TabsList>
                     <TabsContent value="rfq" className="mt-0">
                       <RfqForm
-                        categories={featuredCategories.map((cat) => ({
-                          id: cat.id,
-                          name: cat.name,
-                        }))}
+                        categories={featuredCategories
+                          .filter((cat) => cat && cat.id && cat.name)
+                          .map((cat) => ({
+                            id: cat.id,
+                            name: cat.name,
+                          }))}
                         variant="compact"
                       />
                     </TabsContent>
@@ -195,11 +206,8 @@ export default function HomePage() {
                         </div>
                         <div className="space-y-3">
                           <Input placeholder="Company Name" />
-
                           <Input placeholder="Email Address" type="email" />
-
                           <Input placeholder="Phone Number" type="tel" />
-
                           <Button className="w-full bg-primary hover:bg-primary/90">
                             Join Now
                           </Button>
@@ -220,27 +228,22 @@ export default function HomePage() {
             <div className="flex flex-wrap items-center justify-center gap-8 opacity-70">
               <div className="flex items-center gap-2 font-semibold">
                 <PackageIcon className="h-5 w-5" />
-
                 <span>TechCorp</span>
               </div>
               <div className="flex items-center gap-2 font-semibold">
                 <BuildingIcon className="h-5 w-5" />
-
                 <span>IndustrialPro</span>
               </div>
               <div className="flex items-center gap-2 font-semibold">
                 <ShieldIcon className="h-5 w-5" />
-
                 <span>SafetyFirst</span>
               </div>
               <div className="flex items-center gap-2 font-semibold">
                 <GlobeIcon className="h-5 w-5" />
-
                 <span>GlobalTrade</span>
               </div>
               <div className="flex items-center gap-2 font-semibold">
                 <TruckIcon className="h-5 w-5" />
-
                 <span>LogisticsMaster</span>
               </div>
             </div>
@@ -249,305 +252,188 @@ export default function HomePage() {
       </section>
 
       {/* Categories Section */}
-      <section className="py-12 md:py-16">
+      <section className="py-16 md:py-20">
         <div className="container">
-          <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
-            <div>
-              <h2 className="text-3xl font-bold">Browse Categories</h2>
-              <p className="text-muted-foreground">
-                Explore our wide range of product categories
-              </p>
-            </div>
-            <Button variant="outline" asChild>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">Browse by Category</h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Explore our comprehensive product categories and find exactly what
+              your business needs.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-8">
+            {featuredCategories.length > 0 ? (
+              featuredCategories.map((category) => (
+                <CategoryCard 
+                  key={category?.id || Math.random()}
+                  id={category.id}
+                  name={category.name}
+                  slug={category.slug || category.name.toLowerCase().replace(/\s+/g, '-')}
+                  image={category.image}
+                  productCount={category.product_count}
+                  variant="icon"
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-8">
+                <p className="text-muted-foreground">Loading categories...</p>
+              </div>
+            )}
+          </div>
+
+          <div className="text-center">
+            <Button variant="outline" size="lg" asChild>
               <Link to="/categories">
                 View All Categories
                 <ArrowRightIcon className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </div>
-
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-            {featuredCategories.map((category) => (
-              <CategoryCard
-                key={category.id}
-                id={category.id}
-                name={category.name}
-                slug={category.slug}
-                image={category.image}
-                variant="icon"
-              />
-            ))}
-          </div>
         </div>
       </section>
 
       {/* Featured Products Section */}
-      <section className="bg-muted/50 py-12 md:py-16">
+      <section className="py-16 md:py-20 bg-muted/30">
         <div className="container">
-          <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
-            <div>
-              <h2 className="text-3xl font-bold">Featured Products</h2>
-              <p className="text-muted-foreground">
-                Discover our selection of top products
-              </p>
-            </div>
-            <Button variant="outline" asChild>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">Featured Products</h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Discover trending products from verified suppliers around the
+              world.
+            </p>
+          </div>
+
+          <div className="relative">
+            <Carousel className="w-full">
+              <CarouselContent className="-ml-4">
+                {featuredProducts.length > 0 ? (
+                  featuredProducts.map((product) => (
+                    <CarouselItem 
+                      key={product?.id || Math.random()} 
+                      className="pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+                    >
+                      <ProductCard 
+                        id={product.id}
+                        title={product.title}
+                        slug={product.slug}
+                        image={product.images?.[0] || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400'}
+                        price={{
+                          min: product.price_min || 0,
+                          max: product.price_max || product.price_min || 0
+                        }}
+                        currency={product.currency || 'USD'}
+                        minOrder={product.min_order || 1}
+                        rating={product.rating || 0}
+                        reviewCount={product.review_count || 0}
+                        supplier={{
+                          name: product.suppliers?.name || 'Unknown Supplier',
+                          country: product.suppliers?.country || 'Unknown',
+                          verificationLevel: product.suppliers?.verification_level as "verified" | "gold" | "platinum" || 'verified',
+                          responseRate: product.suppliers?.response_rate || 0
+                        }}
+                        featured={product.featured || false}
+                      />
+                    </CarouselItem>
+                  ))
+                ) : (
+                  <CarouselItem className="pl-4">
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">Loading products...</p>
+                    </div>
+                  </CarouselItem>
+                )}
+              </CarouselContent>
+              {featuredProducts.length > 4 && (
+                <>
+                  <CarouselPrevious />
+                  <CarouselNext />
+                </>
+              )}
+            </Carousel>
+          </div>
+
+          <div className="text-center mt-8">
+            <Button variant="outline" size="lg" asChild>
               <Link to="/products">
                 View All Products
                 <ArrowRightIcon className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </div>
-
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {featuredProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                id={product.id}
-                title={product.title}
-                slug={product.slug}
-                image={product.images[0]}
-                price={product.price}
-                currency={product.currency}
-                minOrder={product.minOrder}
-                rating={product.rating}
-                reviewCount={product.reviewCount}
-                supplier={{
-                  name: product.supplier.name,
-                  country: product.supplier.country,
-                  verificationLevel: product.supplier.verificationLevel,
-                  responseRate: product.supplier.responseRate,
-                }}
-                featured={product.featured}
-              />
-            ))}
-          </div>
         </div>
       </section>
 
       {/* Top Suppliers Section */}
-      <section className="py-12 md:py-16">
+      <section className="py-16 md:py-20">
         <div className="container">
-          <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
-            <div>
-              <h2 className="text-3xl font-bold">Top Suppliers</h2>
-              <p className="text-muted-foreground">
-                Connect with our verified and trusted suppliers
-              </p>
-            </div>
-            <Button variant="outline" asChild>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">Top Suppliers</h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Connect with verified suppliers who consistently deliver quality
+              products and exceptional service.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {topSuppliers.length > 0 ? (
+              topSuppliers.map((supplier) => (
+                <SupplierCard 
+                  key={supplier?.id || Math.random()}
+                  id={supplier.id}
+                  name={supplier.name}
+                  logo={supplier.logo || 'https://github.com/polymet-ai.png'}
+                  country={supplier.country || 'Unknown'}
+                  responseRate={supplier.response_rate || 0}
+                  responseTime={supplier.response_time || 'Unknown'}
+                  yearEstablished={supplier.year_established || 2020}
+                  mainProducts={['Industrial Equipment', 'Electronics']} // Default products since not in schema
+                  certifications={['ISO 9001', 'CE']} // Default certifications since not in schema
+                  rating={supplier.rating || 0}
+                  reviewCount={supplier.review_count || 0}
+                  verificationLevel={supplier.verification_level as "verified" | "gold" | "platinum" || 'verified'}
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-8">
+                <p className="text-muted-foreground">Loading suppliers...</p>
+              </div>
+            )}
+          </div>
+
+          <div className="text-center">
+            <Button variant="outline" size="lg" asChild>
               <Link to="/suppliers">
                 View All Suppliers
                 <ArrowRightIcon className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </div>
-
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {topSuppliers.map((supplier) => (
-              <SupplierCard
-                key={supplier.id}
-                id={supplier.id}
-                name={supplier.name}
-                logo={supplier.logo}
-                country={supplier.country}
-                responseRate={supplier.responseRate}
-                responseTime={supplier.responseTime}
-                yearEstablished={supplier.yearEstablished}
-                mainProducts={supplier.mainProducts}
-                certifications={supplier.certifications}
-                rating={supplier.rating}
-                reviewCount={supplier.reviewCount}
-                verificationLevel={supplier.verificationLevel}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section className="bg-muted/50 py-12 md:py-16">
-        <div className="container">
-          <div className="mb-8 text-center">
-            <h2 className="text-3xl font-bold">What Our Customers Say</h2>
-            <p className="mx-auto mt-2 max-w-2xl text-muted-foreground">
-              Hear from businesses that have found success on our platform
-            </p>
-          </div>
-
-          <Carousel className="mx-auto max-w-4xl">
-            <CarouselContent>
-              {[1, 2, 3].map((index) => (
-                <CarouselItem key={index}>
-                  <Card className="border-none bg-background shadow-sm">
-                    <CardContent className="flex flex-col items-center p-6 text-center">
-                      <div className="mb-4 h-16 w-16 overflow-hidden rounded-full border-4 border-background shadow-md">
-                        <img
-                          src={`https://github.com/yusufhilmi.png`}
-                          alt={`Testimonial ${index}`}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                      <p className="mb-4 text-lg italic">
-                        "Polymet has transformed how we source materials. We've
-                        found reliable suppliers and reduced our procurement
-                        costs by 23% in just six months."
-                      </p>
-                      <div>
-                        <h4 className="font-semibold">Sarah Johnson</h4>
-                        <p className="text-sm text-muted-foreground">
-                          Procurement Manager, TechInnovate Inc.
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="left-2" />
-
-            <CarouselNext className="right-2" />
-          </Carousel>
-        </div>
-      </section>
-
-      {/* Why Choose Us Section */}
-      <section className="py-12 md:py-16">
-        <div className="container">
-          <div className="mb-12 text-center">
-            <h2 className="text-3xl font-bold">Why Choose Polymet</h2>
-            <p className="mx-auto mt-2 max-w-2xl text-muted-foreground">
-              We provide a secure and efficient platform for global B2B trade
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="flex flex-col items-center text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                <GlobeIcon className="h-8 w-8 text-primary" />
-              </div>
-              <h3 className="mb-2 text-xl font-semibold">Global Reach</h3>
-              <p className="text-muted-foreground">
-                Connect with suppliers and buyers from over 150 countries
-                worldwide
-              </p>
-            </div>
-
-            <div className="flex flex-col items-center text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                <ShieldIcon className="h-8 w-8 text-primary" />
-              </div>
-              <h3 className="mb-2 text-xl font-semibold">Verified Suppliers</h3>
-              <p className="text-muted-foreground">
-                All suppliers undergo rigorous verification and quality checks
-              </p>
-            </div>
-
-            <div className="flex flex-col items-center text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                <BuildingIcon className="h-8 w-8 text-primary" />
-              </div>
-              <h3 className="mb-2 text-xl font-semibold">Business Solutions</h3>
-              <p className="text-muted-foreground">
-                Comprehensive tools and services to support your business growth
-              </p>
-            </div>
-
-            <div className="flex flex-col items-center text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                <TruckIcon className="h-8 w-8 text-primary" />
-              </div>
-              <h3 className="mb-2 text-xl font-semibold">Logistics Support</h3>
-              <p className="text-muted-foreground">
-                End-to-end logistics solutions for seamless international trade
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="bg-primary text-primary-foreground py-12 md:py-16">
-        <div className="container">
-          <div className="grid grid-cols-2 gap-8 text-center md:grid-cols-4">
-            <div>
-              <div className="text-4xl font-bold">150+</div>
-              <div className="mt-2">Countries</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold">10K+</div>
-              <div className="mt-2">Suppliers</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold">500K+</div>
-              <div className="mt-2">Products</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold">2M+</div>
-              <div className="mt-2">Buyers</div>
-            </div>
-          </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-12 md:py-16">
-        <div className="container">
-          <div className="rounded-lg bg-muted p-8 md:p-12">
-            <div className="grid gap-8 md:grid-cols-2">
-              <div>
-                <h2 className="mb-4 text-3xl font-bold">
-                  Ready to Grow Your Business?
-                </h2>
-                <p className="mb-6 text-lg text-muted-foreground">
-                  Join thousands of businesses that use Polymet to source
-                  products and find new customers.
-                </p>
-                <div className="flex flex-col space-y-3 sm:flex-row sm:space-x-3 sm:space-y-0">
-                  <Button size="lg" asChild>
-                    <Link to="/register">Join as Buyer</Link>
-                  </Button>
-                  <Button size="lg" variant="outline" asChild>
-                    <Link to="/supplier-register">Become a Supplier</Link>
-                  </Button>
-                </div>
-              </div>
-              <div className="flex flex-col space-y-4">
-                <div className="flex items-start space-x-3">
-                  <div className="mt-0.5">
-                    <CheckIcon className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Free Account Setup</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Create your account and start browsing products in minutes
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="mt-0.5">
-                    <CheckIcon className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Dedicated Support</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Our team is available to help you with any questions
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="mt-0.5">
-                    <CheckIcon className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Secure Transactions</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Trade with confidence using our secure payment options
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+      <section className="py-16 md:py-20 bg-primary text-primary-foreground">
+        <div className="container text-center">
+          <h2 className="text-3xl font-bold mb-4">
+            Ready to Grow Your Business?
+          </h2>
+          <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
+            Join thousands of businesses worldwide who trust Arclane for their
+            B2B sourcing needs.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" variant="secondary" className="font-medium" asChild>
+              <Link to="/sign-up">Start Buying</Link>
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary font-medium"
+              asChild
+            >
+              <Link to="/suppliers/join">Become a Supplier</Link>
+            </Button>
           </div>
         </div>
       </section>

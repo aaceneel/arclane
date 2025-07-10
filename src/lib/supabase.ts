@@ -3,13 +3,57 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
+// Create a fallback client if environment variables are not set (for development)
+let supabase: any
+
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    'Missing Supabase environment variables. Please add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env file.'
+  console.warn(
+    'Missing Supabase environment variables. Using fallback mode. Please add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env file for full functionality.'
   )
+  
+  // Create a mock supabase client for development without errors
+  supabase = {
+    auth: {
+      getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+      signInWithPassword: () => Promise.resolve({ data: { user: null }, error: new Error('Supabase not configured') }),
+      signUp: () => Promise.resolve({ data: { user: null }, error: new Error('Supabase not configured') }),
+      signOut: () => Promise.resolve({ error: null })
+    },
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          order: () => ({
+            limit: () => Promise.resolve({ data: [], error: null })
+          })
+        }),
+        order: () => ({
+          limit: () => Promise.resolve({ data: [], error: null })
+        }),
+        limit: () => Promise.resolve({ data: [], error: null })
+      }),
+      insert: () => ({
+        select: () => ({
+          single: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') })
+        })
+      }),
+      update: () => ({
+        eq: () => ({
+          select: () => ({
+            single: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') })
+          })
+        })
+      }),
+      delete: () => ({
+        eq: () => Promise.resolve({ error: new Error('Supabase not configured') })
+      })
+    })
+  }
+} else {
+  supabase = createClient(supabaseUrl, supabaseAnonKey)
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export { supabase }
 
 // Database types (you can generate these from your Supabase schema)
 export interface Database {
