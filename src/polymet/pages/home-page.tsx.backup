@@ -1,0 +1,384 @@
+"use client";
+
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import CategoryCard from "@/polymet/components/category-card";
+import ProductCard from "@/polymet/components/product-card";
+import RfqForm from "@/polymet/components/rfq-form";
+import SupplierCard from "@/polymet/components/supplier-card";
+import { useProducts, useSuppliers } from "@/hooks/useSupabase";
+import { PRODUCT_CATEGORIES } from "@/polymet/data/product-data";
+import {
+  ArrowRightIcon,
+  BuildingIcon,
+  CheckIcon,
+  GlobeIcon,
+  PackageIcon,
+  SearchIcon,
+  ShieldIcon,
+  TruckIcon,
+} from "lucide-react";
+
+export default function HomePage() {
+  const [activeTab, setActiveTab] = useState("products");
+  
+  // Use Supabase hooks for data fetching
+  const { products: featuredProducts, loading: productsLoading } = useProducts({ 
+    featured: true, 
+    limit: 8 
+  });
+  
+  const { suppliers, loading: suppliersLoading } = useSuppliers(6);
+
+  // Transform Supabase data to match the expected format
+  const transformedFeaturedProducts = featuredProducts?.map(product => ({
+    id: product.id,
+    title: product.title,
+    slug: product.slug,
+    image: product.images?.[0] || 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400',
+    price: {
+      min: product.price_min,
+      max: product.price_max,
+    },
+    currency: product.currency,
+    minOrder: product.min_order,
+    rating: product.rating,
+    reviewCount: product.review_count,
+    supplier: {
+      name: product.suppliers?.name || 'Unknown Supplier',
+      country: product.suppliers?.country || 'Unknown',
+      verificationLevel: product.suppliers?.verification_level || 'verified',
+      responseRate: product.suppliers?.response_rate || 0,
+    },
+    featured: product.featured,
+  })) || [];
+
+  const transformedSuppliers = suppliers?.map(supplier => ({
+    id: supplier.id,
+    name: supplier.name,
+    logo: supplier.logo,
+    country: supplier.country,
+    productCount: 0,
+    responseRate: supplier.response_rate,
+    responseTime: supplier.response_time,
+    yearEstablished: supplier.year_established,
+    verificationLevel: supplier.verification_level,
+    rating: supplier.rating,
+    reviewCount: supplier.review_count,
+    totalRevenue: supplier.total_revenue,
+    mainProducts: [],
+    certifications: [],
+  })) || [];
+
+  const handleRfqSubmit = (values: any) => {
+    console.log("RFQ submitted:", values);
+  };
+
+  return (
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-20 md:py-32">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%239C92AC\" fill-opacity=\"0.05\"%3E%3Ccircle cx=\"30\" cy=\"30\" r=\"2\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-40"></div>
+        
+        <div className="relative">
+          <div className="mx-auto max-w-6xl text-center">
+            <Badge className="mb-4 bg-blue-100 text-blue-700 hover:bg-blue-200">
+              Global B2B Marketplace
+            </Badge>
+            <h1 className="mb-6 text-4xl font-bold tracking-tight text-gray-900 md:text-6xl lg:text-7xl">
+              Connect with{" "}
+              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                Verified Suppliers
+              </span>
+              <br />
+              Worldwide
+            </h1>
+            <p className="mx-auto mb-8 max-w-3xl text-lg text-gray-600 md:text-xl">
+              Discover millions of products from trusted suppliers. Get quotes,
+              compare prices, and source materials for your business with
+              confidence.
+            </p>
+            
+            {/* Search Bar */}
+            <div className="mx-auto mb-8 max-w-4xl">
+              <div className="flex flex-col gap-4 md:flex-row">
+                <div className="relative flex-1">
+                  <SearchIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                  <Input
+                    type="text"
+                    placeholder="Search for products, suppliers, or categories..."
+                    className="pl-12 h-14 text-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+                <Button size="lg" className="h-14 px-8 text-lg">
+                  Search Products
+                </Button>
+              </div>
+            </div>
+
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+              <div className="text-center">
+                <div className="mb-2 text-2xl font-bold text-blue-600 md:text-3xl">
+                  2M+
+                </div>
+                <div className="text-sm text-gray-600">Products</div>
+              </div>
+              <div className="text-center">
+                <div className="mb-2 text-2xl font-bold text-blue-600 md:text-3xl">
+                  50K+
+                </div>
+                <div className="text-sm text-gray-600">Suppliers</div>
+              </div>
+              <div className="text-center">
+                <div className="mb-2 text-2xl font-bold text-blue-600 md:text-3xl">
+                  200+
+                </div>
+                <div className="text-sm text-gray-600">Countries</div>
+              </div>
+              <div className="text-center">
+                <div className="mb-2 text-2xl font-bold text-blue-600 md:text-3xl">
+                  99.5%
+                </div>
+                <div className="text-sm text-gray-600">Satisfaction</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Categories */}
+      <section className="py-16 md:py-24">
+        <div className="mb-12 text-center">
+          <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">
+            Shop by Category
+          </h2>
+          <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+            Explore our wide range of product categories to find exactly what
+            you need
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-6">
+          {PRODUCT_CATEGORIES.slice(0, 6).map((category) => (
+            <CategoryCard
+              key={category.id}
+              id={category.id}
+              name={category.name}
+              image={category.image}
+              productCount={category.productCount}
+            />
+          ))}
+        </div>
+
+        <div className="mt-12 text-center">
+          <Button variant="outline" size="lg" asChild>
+            <Link to="/categories">
+              View All Categories
+              <ArrowRightIcon className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+      </section>
+
+      {/* Featured Products and Suppliers */}
+      <section className="py-16 md:py-24">
+        <div className="mb-12 text-center">
+          <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">
+            Featured Products & Suppliers
+          </h2>
+          <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+            Discover top-rated products and verified suppliers
+          </p>
+        </div>
+
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="w-full"
+        >
+          <TabsList className="mb-8 grid w-full grid-cols-2 md:w-auto md:grid-cols-2">
+            <TabsTrigger value="products">Featured Products</TabsTrigger>
+            <TabsTrigger value="suppliers">Top Suppliers</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="products">
+            {productsLoading ? (
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                {[...Array(8)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-[350px] animate-pulse rounded-lg bg-muted"
+                  ></div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                {transformedFeaturedProducts.map((product) => (
+                  <ProductCard key={product.id} {...product} />
+                ))}
+              </div>
+            )}
+            
+            <div className="mt-12 text-center">
+              <Button variant="outline" size="lg" asChild>
+                <Link to="/products">
+                  View All Products
+                  <ArrowRightIcon className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="suppliers">
+            {suppliersLoading ? (
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
+                {[...Array(6)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-[300px] animate-pulse rounded-lg bg-muted"
+                  ></div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
+                {transformedSuppliers.map((supplier) => (
+                  <SupplierCard key={supplier.id} {...supplier} />
+                ))}
+              </div>
+            )}
+            
+            <div className="mt-12 text-center">
+              <Button variant="outline" size="lg" asChild>
+                <Link to="/suppliers">
+                  View All Suppliers
+                  <ArrowRightIcon className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </section>
+
+      {/* Trust & Safety */}
+      <section className="bg-gray-50 py-16 md:py-24">
+        <div className="mb-12 text-center">
+          <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">
+            Why Choose Arclane?
+          </h2>
+          <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+            We provide a secure, trusted platform for global B2B trade
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+          <Card className="border-0 bg-white shadow-lg">
+            <CardContent className="p-6 text-center">
+              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100">
+                <ShieldIcon className="h-6 w-6 text-blue-600" />
+              </div>
+              <h3 className="mb-2 font-semibold">Verified Suppliers</h3>
+              <p className="text-sm text-muted-foreground">
+                All suppliers undergo strict verification to ensure quality and
+                reliability
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 bg-white shadow-lg">
+            <CardContent className="p-6 text-center">
+              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-green-100">
+                <CheckIcon className="h-6 w-6 text-green-600" />
+              </div>
+              <h3 className="mb-2 font-semibold">Quality Assurance</h3>
+              <p className="text-sm text-muted-foreground">
+                Every product is quality checked before being listed on our
+                platform
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 bg-white shadow-lg">
+            <CardContent className="p-6 text-center">
+              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100">
+                <GlobeIcon className="h-6 w-6 text-purple-600" />
+              </div>
+              <h3 className="mb-2 font-semibold">Global Reach</h3>
+              <p className="text-sm text-muted-foreground">
+                Connect with suppliers and buyers from over 200 countries
+                worldwide
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 bg-white shadow-lg">
+            <CardContent className="p-6 text-center">
+              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-orange-100">
+                <TruckIcon className="h-6 w-6 text-orange-600" />
+              </div>
+              <h3 className="mb-2 font-semibold">Fast Shipping</h3>
+              <p className="text-sm text-muted-foreground">
+                Reliable logistics partners ensure fast and secure delivery
+                worldwide
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* RFQ Section */}
+      <section className="py-16 md:py-24">
+        <div className="mb-12 text-center">
+          <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">
+            Can't Find What You Need?
+          </h2>
+          <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+            Submit a Request for Quotation and let suppliers come to you with
+            competitive offers
+          </p>
+        </div>
+
+        <div className="mx-auto max-w-4xl">
+          <Card className="border-0 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-xl">
+            <CardContent className="p-8">
+              <RfqForm
+                categories={PRODUCT_CATEGORIES}
+                onSubmit={handleRfqSubmit}
+                variant="compact"
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Newsletter */}
+      <section className="bg-gray-900 py-16 text-white md:py-24">
+        <div className="text-center">
+          <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">
+            Stay Updated
+          </h2>
+          <p className="mx-auto mb-8 max-w-2xl text-lg text-gray-300">
+            Get the latest product updates, supplier news, and market insights
+            delivered to your inbox
+          </p>
+          
+          <div className="mx-auto flex max-w-md flex-col gap-4 sm:flex-row">
+            <Input
+              type="email"
+              placeholder="Enter your email"
+              className="bg-white text-gray-900"
+            />
+            <Button className="bg-white text-gray-900 hover:bg-gray-100">
+              Subscribe
+            </Button>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}

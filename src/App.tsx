@@ -12,6 +12,7 @@ import DashboardPage from "@/polymet/pages/dashboard-page";
 import DashboardMessagesPage from "@/polymet/pages/dashboard-messages-page";
 import CartPage from "@/polymet/pages/cart-page";
 import MessagesPage from "@/polymet/pages/messages-page";
+import SupabaseTestPage from "@/polymet/pages/supabase-test-page";
 
 export default function MarketplacePrototype() {
   return (
@@ -107,6 +108,15 @@ export default function MarketplacePrototype() {
           element={
             <MarketplaceLayout>
               <MessagesPage />
+            </MarketplaceLayout>
+          }
+        />
+
+        <Route
+          path="/supabase-test"
+          element={
+            <MarketplaceLayout>
+              <SupabaseTestPage />
             </MarketplaceLayout>
           }
         />
